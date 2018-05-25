@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLabel, QMenu
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLabel, QMenu, QMessageBox, QDialog
 from PyQt5.QtGui import QIcon, QPixmap, QImage
 from PyQt5 import QtGui
 from PyQt5.QtCore import QDateTime, QDate, QTime, Qt
@@ -58,7 +58,7 @@ class Window(QMainWindow):
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu('File')
         patternMenu = mainMenu.addMenu('Pattern')
-        aboutMenu = mainMenu.addMenu('About')
+        helpMenu = mainMenu.addMenu('Help')
 
         # Exit button
         exitButton = QAction(QIcon('./icon/exit.png'), 'Exit', self)
@@ -66,6 +66,12 @@ class Window(QMainWindow):
         exitButton.setStatusTip('Exit application')
         exitButton.triggered.connect(self.close)
         fileMenu.addAction(exitButton)
+
+        # About button
+        about = QAction(QIcon('./icon/about.png'), "About", self)
+        about.triggered.connect(self.popupMessage)
+        helpMenu.addAction(about)
+
 
         # red button
         redButton = QAction(QIcon(patterns["Red"]), 'Red', self)
@@ -124,7 +130,7 @@ class Window(QMainWindow):
         patternMenu.addAction(crosstalkButton)
 
         # Crosstalk_black button
-        crosstalkblackButton = QAction(QIcon(patterns["Crosstalk_black"]), 'Crosstalk_black', self)
+        crosstalkblackButton = QAction(QIcon(patterns["Crosstalk_black"]), 'Crosstalk black', self)
         crosstalkblackButton.setShortcut('Alt + 9')
         crosstalkblackButton.setStatusTip('Crosstalk_black')
         crosstalkblackButton.triggered.connect(lambda: self.on_click(patterns["Crosstalk_black"]))
@@ -138,7 +144,7 @@ class Window(QMainWindow):
         patternMenu.addAction(grayscaleButton)
 
         # Grayscale_reversed button
-        grayscaleReversedButton = QAction(QIcon(patterns["Grayscale_reversed"]), 'Grayscale_reversed', self)
+        grayscaleReversedButton = QAction(QIcon(patterns["Grayscale_reversed"]), 'Grayscale reversed', self)
         grayscaleReversedButton.setShortcut('Alt + 11')
         grayscaleReversedButton.setStatusTip('Grayscale_reversed')
         grayscaleReversedButton.triggered.connect(lambda: self.on_click(patterns["Grayscale_reversed"]))
@@ -158,6 +164,10 @@ class Window(QMainWindow):
         self.label.setPixmap(QPixmap(image))
         self.label.setGeometry(0, 0, image.width(), image.height())
         self.label.show()
+
+
+    def popupMessage(self):
+        QMessageBox.about(self, "About", "Developed by yifei.li@byton.com")
 
 
 if __name__ == '__main__':
