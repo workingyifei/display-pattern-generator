@@ -5,7 +5,6 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import QDateTime, QDate, QTime, Qt
 
 
-
 class Window(QMainWindow):
 
     def __init__(self):
@@ -18,14 +17,32 @@ class Window(QMainWindow):
 
         self.initUI()
 
-
     def initUI(self):
-
-
         patterns = {
-            "Red": "solid_blue.bmp",
-            "Green": "solid_green.bmp",
-            "Blue": "solid_red.bmp"
+            "Red": "./patterns/solid_blue.bmp",
+            "Green": "./patterns/solid_green.bmp",
+            "Blue": "./patterns/solid_red.bmp",
+            "White": "./patterns/solid_white.bmp",
+            "Gray64": "./patterns/img_gray64.bmp",
+            "Gray32": "./patterns/img_gray32.bmp",
+            "Gray16": "./patterns/img_gray16.bmp",
+            "Crosstalk": "./patterns/crosstalk.bmp",
+            "Crosstalk_black": "./patterns/crosstalk_black.bmp",
+            "Grayscale": "./patterns/grayscale.bmp",
+            "Grayscale_reversed": "./patterns/grayscale_reversed.bmp",
+            "32X6A": "./patterns/32x6A.bmp",
+            "32X6B": "./patterns/32x6B.bmp",
+            "32X3A": "./patterns/32x3A.bmp",
+            "32X3B": "./patterns/32x3B.bmp",
+            "16X6A": "./patterns/16x6A.bmp",
+            "16X6B": "./patterns/16x6B.bmp",
+            "2X1A": "./patterns/2x1A.bmp",
+            "2X1B": "./patterns/2x1B.bmp",
+            "1X6A": "./patterns/1x6A.bmp",
+            "1x6B": "./patterns/1x6B.bmp",
+            "1X2A": "./patterns/1x2A.bmp",
+            "1x2B": "./patterns/1x2B.bmp",
+            "Skip_one_dot": "./patterns/skip_one_dot.bmp"
         }
 
         icons = {
@@ -37,88 +54,96 @@ class Window(QMainWindow):
         self.setGeometry(self.left, self.top, self.width, self.height)
         self.setWindowIcon(QIcon(icons["window"]))
 
-
         # Menu
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu('File')
         patternMenu = mainMenu.addMenu('Pattern')
         aboutMenu = mainMenu.addMenu('About')
 
-
-        # exit button
+        # Exit button
         exitButton = QAction(QIcon('./icon/exit.png'), 'Exit', self)
         exitButton.setShortcut('Ctrl+Q')
         exitButton.setStatusTip('Exit application')
         exitButton.triggered.connect(self.close)
         fileMenu.addAction(exitButton)
 
-
-
-
         # red button
-        redButton = QAction(QIcon('./pattern/solid_blue.bmp'), 'Red', self)
+        redButton = QAction(QIcon(patterns["Red"]), 'Red', self)
         redButton.setShortcut('Alt + 1')
         redButton.setStatusTip('Solid red')
         redButton.triggered.connect(lambda: self.on_click(patterns["Red"]))
         patternMenu.addAction(redButton)
 
         # green button
-        greenButton = QAction(QIcon('./pattern/solid_green.bmp'), 'Green', self)
+        greenButton = QAction(QIcon(patterns["Green"]), 'Green', self)
         greenButton.setShortcut('Alt + 2')
         greenButton.setStatusTip('Solid green')
         greenButton.triggered.connect(lambda: self.on_click(patterns["Green"]))
         patternMenu.addAction(greenButton)
 
         # blue button
-        blueButton = QAction(QIcon('./pattern/solid_red.bmp'), 'Blue', self)
-        blueButton.setShortcut('Alt + 1')
+        blueButton = QAction(QIcon(patterns["Blue"]), 'Blue', self)
+        blueButton.setShortcut('Alt + 3')
         blueButton.setStatusTip('Solid blue')
         blueButton.triggered.connect(lambda: self.on_click(patterns["Blue"]))
         patternMenu.addAction(blueButton)
 
+        # white button
+        whiteButton = QAction(QIcon(patterns["White"]), 'White', self)
+        whiteButton.setShortcut('Alt + 4')
+        whiteButton.setStatusTip('Solid white')
+        whiteButton.triggered.connect(lambda: self.on_click(patterns["White"]))
+        patternMenu.addAction(whiteButton)
 
-        #
-        # # blue button
-        # blueButton = QAction(QIcon('./pattern/solid_blue.bmp'), 'Blue', self)
-        # blueButton.setShortcut('Alt + 1')
-        # blueButton.setStatusTip('Solid blue')
-        # blueButton.triggered.connect(self.on_click)
-        # patternMenu.addAction(blueButton)
-        #
-        # # blue button
-        # blueButton = QAction(QIcon('./pattern/solid_blue.bmp'), 'Blue', self)
-        # blueButton.setShortcut('Alt + 1')
-        # blueButton.setStatusTip('Solid blue')
-        # blueButton.triggered.connect(self.on_click)
-        # patternMenu.addAction(blueButton)
-        #
-        # # blue button
-        # blueButton = QAction(QIcon('./pattern/solid_blue.bmp'), 'Blue', self)
-        # blueButton.setShortcut('Alt + 1')
-        # blueButton.setStatusTip('Solid blue')
-        # blueButton.triggered.connect(self.on_click)
-        # patternMenu.addAction(blueButton)
-        #
-        # # blue button
-        # blueButton = QAction(QIcon('./pattern/solid_blue.bmp'), 'Blue', self)
-        # blueButton.setShortcut('Alt + 1')
-        # blueButton.setStatusTip('Solid blue')
-        # blueButton.triggered.connect(self.on_click)
-        # patternMenu.addAction(blueButton)
-        #
-        # # blue button
-        # blueButton = QAction(QIcon('./pattern/solid_blue.bmp'), 'Blue', self)
-        # blueButton.setShortcut('Alt + 1')
-        # blueButton.setStatusTip('Solid blue')
-        # blueButton.triggered.connect(self.on_click)
-        # patternMenu.addAction(blueButton)
-        #
-        # # blue button
-        # blueButton = QAction(QIcon('./pattern/solid_blue.bmp'), 'Blue', self)
-        # blueButton.setShortcut('Alt + 1')
-        # blueButton.setStatusTip('Solid blue')
-        # blueButton.triggered.connect(self.on_click)
-        # patternMenu.addAction(blueButton)
+        # Gray64 button
+        gray64Button = QAction(QIcon(patterns["Gray64"]), 'Gray64', self)
+        gray64Button.setShortcut('Alt + 5')
+        gray64Button.setStatusTip('Gray64')
+        gray64Button.triggered.connect(lambda: self.on_click(patterns["Gray64"]))
+        patternMenu.addAction(gray64Button)
+
+        # Gray32 button
+        gray32Button = QAction(QIcon(patterns["Gray32"]), 'Gray32', self)
+        gray32Button.setShortcut('Alt + 6')
+        gray32Button.setStatusTip('Gray32')
+        gray32Button.triggered.connect(lambda: self.on_click(patterns["Gray32"]))
+        patternMenu.addAction(gray32Button)
+
+        # Gray16 button
+        gray16Button = QAction(QIcon(patterns["Gray16"]), 'Gray16', self)
+        gray16Button.setShortcut('Alt + 7')
+        gray16Button.setStatusTip('Gray16')
+        gray16Button.triggered.connect(lambda: self.on_click(patterns["Gray16"]))
+        patternMenu.addAction(gray16Button)
+
+        # Crosstalk button
+        crosstalkButton = QAction(QIcon(patterns["Crosstalk"]), 'Crosstalk', self)
+        crosstalkButton.setShortcut('Alt + 8')
+        crosstalkButton.setStatusTip('Crosstalk')
+        crosstalkButton.triggered.connect(lambda: self.on_click(patterns["Crosstalk"]))
+        patternMenu.addAction(crosstalkButton)
+
+        # Crosstalk_black button
+        crosstalkblackButton = QAction(QIcon(patterns["Crosstalk_black"]), 'Crosstalk_black', self)
+        crosstalkblackButton.setShortcut('Alt + 9')
+        crosstalkblackButton.setStatusTip('Crosstalk_black')
+        crosstalkblackButton.triggered.connect(lambda: self.on_click(patterns["Crosstalk_black"]))
+        patternMenu.addAction(crosstalkblackButton)
+
+        # Grayscale button
+        grayscaleButton = QAction(QIcon(patterns["Grayscale"]), 'Grayscale', self)
+        grayscaleButton.setShortcut('Alt + 10')
+        grayscaleButton.setStatusTip('Grayscale')
+        grayscaleButton.triggered.connect(lambda: self.on_click(patterns["Grayscale"]))
+        patternMenu.addAction(grayscaleButton)
+
+        # Grayscale_reversed button
+        grayscaleReversedButton = QAction(QIcon(patterns["Grayscale_reversed"]), 'Grayscale_reversed', self)
+        grayscaleReversedButton.setShortcut('Alt + 11')
+        grayscaleReversedButton.setStatusTip('Grayscale_reversed')
+        grayscaleReversedButton.triggered.connect(lambda: self.on_click(patterns["Grayscale_reversed"]))
+        patternMenu.addAction(grayscaleReversedButton)
+
 
 
         # save button
@@ -126,15 +151,13 @@ class Window(QMainWindow):
         # Label
         label = QLabel(self)
 
-
     def on_click(self, pattern):
         print("success")
         self.label = QLabel(self)
-        image = QtGui.QImage(QtGui.QImageReader("./patterns/" + pattern).read())
+        image = QtGui.QImage(QtGui.QImageReader(pattern).read())
         self.label.setPixmap(QPixmap(image))
-        self.label.setGeometry(0,0,image.width(), image.height())
+        self.label.setGeometry(0, 0, image.width(), image.height())
         self.label.show()
-
 
 
 if __name__ == '__main__':
