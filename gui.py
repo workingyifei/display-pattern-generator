@@ -167,7 +167,7 @@ class Window(QMainWindow):
 
 
     def popupMessage(self):
-        QMessageBox.about(self, "About", "Developed by yifei.li@byton.com")
+        QMessageBox.about(self, "About", "Developed by <a href='yifei.li@byton.com'>Yifei Li</a>")
 
 
 if __name__ == '__main__':
