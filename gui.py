@@ -17,7 +17,7 @@ class Window(QMainWindow):
 
         self.initUI()
 
-    def initUI(self):
+    def initUI(self, dpdpk=None):
         patterns = {
             "Red": "./patterns/solid_blue.bmp",
             "Green": "./patterns/solid_green.bmp",
@@ -50,6 +50,7 @@ class Window(QMainWindow):
         }
 
         # Window
+        self.showMaximized()
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
         self.setWindowIcon(QIcon(icons["window"]))
@@ -174,4 +175,5 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = Window()
     window.show()
+
     sys.exit(app.exec_())
