@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLabel, QMenu, QMessageBox, QDialog
 from PyQt5.QtGui import QIcon, QPixmap, QImage
-from PyQt5 import QtGui
+from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import QDateTime, QDate, QTime, Qt
 
 
@@ -151,7 +151,7 @@ class Window(QMainWindow):
         grayscaleReversedButton.triggered.connect(lambda: self.on_click(patterns["Grayscale_reversed"]))
         patternMenu.addAction(grayscaleReversedButton)
 
-
+        self.keyPressEvent()
 
         # save button
 
@@ -169,6 +169,13 @@ class Window(QMainWindow):
 
     def popupMessage(self):
         QMessageBox.about(self, "About", "Developed by <a href='yifei.li@byton.com'>Yifei Li</a>")
+
+
+    def keyPressEvent(self, QKeyEvent):
+        key = QKeyEvent.key()
+        if key == QtCore.Qt.Key_Right:
+            print("right arrow key pressed")
+
 
 
 if __name__ == '__main__':
