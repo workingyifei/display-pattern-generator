@@ -20,8 +20,8 @@ for file in os.listdir(imageDir):
     image_path_list.append(os.path.join(imageDir, file))
 
 
-
-
+# init flag
+flag = False
 
 #loop through image_path_list to open each image
 while True:
