@@ -1,3 +1,7 @@
+# Developed by Yifei Li
+# Email: yifei.li@byton.com
+
+
 # import the necessary packages
 import cv2
 import os, os.path
