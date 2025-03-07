@@ -2,6 +2,43 @@
 
 A cross-platform application for generating various test patterns to check display functionality, appearance, and optical performance characteristics.
 
+## Demo Images
+
+### Solid Colors
+![Solid Colors](patterns/demo/solid_colors_pattern.png)
+
+- **Red, Green, Blue, White, Black, Gray16, Gray32, Gray64**: Basic color testing and color accuracy
+- **Purpose**: Test color reproduction, identify dead pixels, check display uniformity, and evaluate grayscale levels.
+
+### Gray Gradients
+![Gray Gradients](patterns/demo/gray_gradients_pattern.png)
+
+- **Gray16, Gray32, Gray64**: Fixed grayscale level testing
+- **Gray Gradient**: Full grayscale gradient test
+- **Reversed Gradient**: Inverted grayscale gradient test
+- **Purpose**: Check gamma correction, color temperature, and grayscale reproduction.
+
+### Crosstalk Patterns
+![Crosstalk Patterns](patterns/demo/crosstalk_patterns.png)
+
+- **White with Black Box**: Tests for pixel bleeding against white background
+- **Black with Gray Box**: Tests for pixel bleeding against black background
+- **Gray with Black Box**: Tests for pixel bleeding with gray background
+- **Purpose**: Identify pixel bleeding and interference between adjacent pixels
+
+### Grid Patterns
+![Grid Patterns](patterns/demo/grid_patterns.png)
+
+- **32x6, 32x3, 16x6**: Fine grid patterns for testing pixel alignment
+- **2x1, 1x6, 1x2**: Coarse grid patterns for testing display geometry
+- **Purpose**: Verify pixel alignment, check for geometric distortion
+
+### Skip-One-Pixel Pattern
+![Skip-One-Dot Pattern](patterns/demo/skip_one_pixel_pattern.png)
+
+- **Checkerboard**: Pattern for testing individual pixel response
+- **Purpose**: Check pixel-level rendering and response time
+
 
 ## Features
 
@@ -69,43 +106,6 @@ grid_pattern = generator.generate_grid(rows=6, cols=32)
 # Generate all patterns
 all_patterns = generator.generate_all_patterns()
 ```
-
-## Demo Images
-
-### Solid Colors
-![Solid Colors](patterns/demo/solid_colors_pattern.png)
-
-- **Red, Green, Blue, White, Black, Gray16, Gray32, Gray64**: Basic color testing and color accuracy
-- **Purpose**: Test color reproduction, identify dead pixels, check display uniformity, and evaluate grayscale levels.
-
-### Gray Gradients
-![Gray Gradients](patterns/demo/gray_gradients_pattern.png)
-
-- **Gray16, Gray32, Gray64**: Fixed grayscale level testing
-- **Gray Gradient**: Full grayscale gradient test
-- **Reversed Gradient**: Inverted grayscale gradient test
-- **Purpose**: Check gamma correction, color temperature, and grayscale reproduction.
-
-### Crosstalk Patterns
-![Crosstalk Patterns](patterns/demo/crosstalk_patterns.png)
-
-- **White with Black Box**: Tests for pixel bleeding against white background
-- **Black with Gray Box**: Tests for pixel bleeding against black background
-- **Gray with Black Box**: Tests for pixel bleeding with gray background
-- **Purpose**: Identify pixel bleeding and interference between adjacent pixels
-
-### Grid Patterns
-![Grid Patterns](patterns/demo/grid_patterns.png)
-
-- **32x6, 32x3, 16x6**: Fine grid patterns for testing pixel alignment
-- **2x1, 1x6, 1x2**: Coarse grid patterns for testing display geometry
-- **Purpose**: Verify pixel alignment, check for geometric distortion
-
-### Skip-One-Pixel Pattern
-![Skip-One-Dot Pattern](patterns/demo/skip_one_pixel_pattern.png)
-
-- **Checkerboard**: Pattern for testing individual pixel response
-- **Purpose**: Check pixel-level rendering and response time
 
 ## Display Defects 
 
