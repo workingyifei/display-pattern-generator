@@ -1,12 +1,22 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLabel, QMenu, QMessageBox, QDialog
+import os
+import logging
+from typing import Dict, Optional
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QWidget, QPushButton, 
+                          QAction, QLabel, QMenu, QMessageBox, QDialog, QComboBox, 
+                          QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit, QCheckBox,
+                          QSpinBox)
 from PyQt5.QtGui import QIcon, QPixmap, QImage
-from PyQt5 import QtGui, QtCore
-from PyQt5.QtCore import QDateTime, QDate, QTime, Qt
+from PyQt5.QtCore import Qt
+from pattern_generator import PatternGenerator
+import cv2
+import numpy as np
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Window(QMainWindow):
-
     def __init__(self):
         super().__init__()
         self.title = "Pattern Generator"
@@ -14,173 +24,250 @@ class Window(QMainWindow):
         self.top = 100
         self.width = 1280
         self.height = 240
+        self.current_label: Optional[QLabel] = None
+        
+        # Pattern categories and their specific options
+        self.pattern_categories = {
+            "Solid Color": ["red", "green", "blue", "white", "black", "gray16", "gray32", "gray64", 
+                          "gray128", "yellow", "magenta", "cyan"],
+            "Grayscale": ["normal", "reversed"],
+            "Crosstalk": [
+                "white_black", "gray32_black", "black_blue", "black_cyan",
+                "gray32_white", "black_gray32", "green_gray32", "magenta_gray32",
+                "red_gray32", "yellow_gray32"
+            ],
+            "Grid": ["1x2", "1x16", "2x1", "3x32", "6x1", "6x16", "6x32"]
+        }
+
+        self.icons = {
+            "window": "./icon/window.png",
+            "exit": "./icon/exit.png",
+            "about": "./icon/about.png"
+        }
 
         self.initUI()
 
-    def initUI(self, dpdpk=None):
-        patterns = {
-            "Red": "./patterns/solid_blue.bmp",
-            "Green": "./patterns/solid_green.bmp",
-            "Blue": "./patterns/solid_red.bmp",
-            "White": "./patterns/solid_white.bmp",
-            "Gray64": "./patterns/img_gray64.bmp",
-            "Gray32": "./patterns/img_gray32.bmp",
-            "Gray16": "./patterns/img_gray16.bmp",
-            "Crosstalk": "./patterns/crosstalk.bmp",
-            "Crosstalk_black": "./patterns/crosstalk_black.bmp",
-            "Grayscale": "./patterns/grayscale.bmp",
-            "Grayscale_reversed": "./patterns/grayscale_reversed.bmp",
-            "32X6A": "./patterns/32x6A.bmp",
-            "32X6B": "./patterns/32x6B.bmp",
-            "32X3A": "./patterns/32x3A.bmp",
-            "32X3B": "./patterns/32x3B.bmp",
-            "16X6A": "./patterns/16x6A.bmp",
-            "16X6B": "./patterns/16x6B.bmp",
-            "2X1A": "./patterns/2x1A.bmp",
-            "2X1B": "./patterns/2x1B.bmp",
-            "1X6A": "./patterns/1x6A.bmp",
-            "1x6B": "./patterns/1x6B.bmp",
-            "1X2A": "./patterns/1x2A.bmp",
-            "1x2B": "./patterns/1x2B.bmp",
-            "Skip_one_dot": "./patterns/skip_one_dot.bmp"
-        }
-
-        icons = {
-            "window": "./icon/window.png"
-        }
-
-        # Window
+    def initUI(self):
+        # Window setup
         self.showMaximized()
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-        self.setWindowIcon(QIcon(icons["window"]))
+        
+        try:
+            self.setWindowIcon(QIcon(self.icons["window"]))
+        except Exception as e:
+            logger.error(f"Failed to load window icon: {e}")
 
-        # Menu
+        # Menu setup
+        self.setupMenus()
+
+        # Main layout
+        main_widget = QWidget()
+        self.main_layout = QVBoxLayout()
+
+        # Resolution input
+        form_layout = QFormLayout()
+        self.width_input = QLineEdit()
+        self.width_input.setPlaceholderText("Enter width")
+        self.height_input = QLineEdit()
+        self.height_input.setPlaceholderText("Enter height")
+        form_layout.addRow("Width:", self.width_input)
+        form_layout.addRow("Height:", self.height_input)
+        self.main_layout.addLayout(form_layout)
+
+        # Pattern category selection
+        self.category_dropdown = QComboBox()
+        self.category_dropdown.addItems(self.pattern_categories.keys())
+        self.category_dropdown.currentTextChanged.connect(self.on_category_changed)
+        self.main_layout.addWidget(QLabel("Select Pattern Category:"))
+        self.main_layout.addWidget(self.category_dropdown)
+
+        # Container for dynamic options
+        self.options_container = QWidget()
+        self.options_layout = QVBoxLayout()
+        self.options_container.setLayout(self.options_layout)
+        self.main_layout.addWidget(self.options_container)
+
+        # Display button
+        display_button = QPushButton("Display Pattern")
+        display_button.clicked.connect(self.display_selected_pattern)
+        self.main_layout.addWidget(display_button)
+
+        main_widget.setLayout(self.main_layout)
+        self.setCentralWidget(main_widget)
+
+        # Initialize the options for the first category
+        self.on_category_changed(self.category_dropdown.currentText())
+
+    def clear_options_layout(self):
+        """Clear all widgets from the options layout"""
+        while self.options_layout.count():
+            child = self.options_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+    def on_category_changed(self, category):
+        """Update the options based on the selected category"""
+        self.clear_options_layout()
+
+        if category == "Solid Color":
+            self.options_layout.addWidget(QLabel("Select Color:"))
+            color_dropdown = QComboBox()
+            color_dropdown.addItems(self.pattern_categories[category])
+            color_dropdown.setObjectName("color_dropdown")
+            self.options_layout.addWidget(color_dropdown)
+
+        elif category == "Grayscale":
+            reversed_check = QCheckBox("Reversed")
+            reversed_check.setObjectName("reversed_check")
+            self.options_layout.addWidget(reversed_check)
+
+        elif category == "Crosstalk":
+            self.options_layout.addWidget(QLabel("Select Combination:"))
+            combo_dropdown = QComboBox()
+            combo_dropdown.addItems(self.pattern_categories[category])
+            combo_dropdown.setObjectName("combo_dropdown")
+            self.options_layout.addWidget(combo_dropdown)
+
+        elif category == "Grid":
+            grid_layout = QFormLayout()
+            rows_spin = QSpinBox()
+            rows_spin.setRange(1, 100)
+            rows_spin.setObjectName("rows_spin")
+            cols_spin = QSpinBox()
+            cols_spin.setRange(1, 100)
+            cols_spin.setObjectName("cols_spin")
+            grid_layout.addRow("Rows:", rows_spin)
+            grid_layout.addRow("Columns:", cols_spin)
+            self.options_layout.addLayout(grid_layout)
+
+    def get_selected_options(self):
+        """Get the currently selected options based on the pattern category"""
+        category = self.category_dropdown.currentText()
+        options = {}
+
+        for i in range(self.options_layout.count()):
+            widget = self.options_layout.itemAt(i).widget()
+            if widget is None:
+                continue
+
+            if category == "Solid Color" and widget.objectName() == "color_dropdown":
+                options["color"] = widget.currentText()
+            elif category == "Grayscale" and widget.objectName() == "reversed_check":
+                options["reversed"] = widget.isChecked()
+            elif category == "Crosstalk" and widget.objectName() == "combo_dropdown":
+                bg_color, fg_color = widget.currentText().split("_")
+                options["background_color"] = bg_color
+                options["box_color"] = fg_color
+            elif category == "Grid":
+                if widget.objectName() == "rows_spin":
+                    options["rows"] = widget.value()
+                elif widget.objectName() == "cols_spin":
+                    options["cols"] = widget.value()
+
+        return options
+
+    def display_selected_pattern(self):
+        width = self.width_input.text()
+        height = self.height_input.text()
+
+        if not width.isdigit() or not height.isdigit():
+            QMessageBox.critical(self, "Error", "Please enter valid numeric values for width and height.")
+            return
+
+        width = int(width)
+        height = int(height)
+
+        try:
+            # Create pattern generator
+            generator = PatternGenerator(width=width, height=height)
+            
+            # Generate pattern based on category and options
+            category = self.category_dropdown.currentText()
+            options = self.get_selected_options()
+            
+            if category == "Solid Color":
+                image = generator.generate_solid_color(options["color"], save=False)
+            elif category == "Grayscale":
+                image = generator.generate_grayscale(reversed=options.get("reversed", False), save=False)
+            elif category == "Crosstalk":
+                image = generator.generate_crosstalk(
+                    background_color=options["background_color"],
+                    box_color=options["box_color"],
+                    save=False
+                )
+            elif category == "Grid":
+                image = generator.generate_grid(
+                    rows=options["rows"],
+                    cols=options["cols"],
+                    save=False
+                )
+
+            # Convert OpenCV image (BGR) to QImage (RGB)
+            height, width, channel = image.shape
+            bytes_per_line = 3 * width
+            image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            qimage = QImage(image_rgb.data, width, height, bytes_per_line, QImage.Format_RGB888)
+
+            # Create a new window to display the image
+            image_window = QDialog(self)
+            image_window.setWindowTitle("Pattern Display")
+            image_window.setGeometry(200, 200, width, height)
+
+            # Create and show new label in the new window
+            image_label = QLabel(image_window)
+            image_label.setPixmap(QPixmap.fromImage(qimage))
+            image_label.setGeometry(0, 0, width, height)
+            image_window.exec_()
+            
+            logger.info(f"Successfully displayed {category} pattern")
+        except Exception as e:
+            logger.error(f"Error displaying pattern: {e}")
+            QMessageBox.critical(self, "Error", f"Failed to display pattern: {e}")
+
+    def setupMenus(self):
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu('File')
-        patternMenu = mainMenu.addMenu('Pattern')
         helpMenu = mainMenu.addMenu('Help')
 
         # Exit button
-        exitButton = QAction(QIcon('./icon/exit.png'), 'Exit', self)
-        exitButton.setShortcut('Ctrl+Q')
-        exitButton.setStatusTip('Exit application')
-        exitButton.triggered.connect(self.close)
-        fileMenu.addAction(exitButton)
+        self.addMenuAction(fileMenu, 'Exit', self.icons["exit"], 'Ctrl+Q', 
+                          'Exit application', self.close)
 
         # About button
-        about = QAction(QIcon('./icon/about.png'), "About", self)
-        about.triggered.connect(self.popupMessage)
-        helpMenu.addAction(about)
+        self.addMenuAction(helpMenu, 'About', self.icons["about"], None,
+                          'About the application', self.popupMessage)
 
-
-        # red button
-        redButton = QAction(QIcon(patterns["Red"]), 'Red', self)
-        redButton.setShortcut('Alt + 1')
-        redButton.setStatusTip('Solid red')
-        redButton.triggered.connect(lambda: self.on_click(patterns["Red"]))
-        patternMenu.addAction(redButton)
-
-        # green button
-        greenButton = QAction(QIcon(patterns["Green"]), 'Green', self)
-        greenButton.setShortcut('Alt + 2')
-        greenButton.setStatusTip('Solid green')
-        greenButton.triggered.connect(lambda: self.on_click(patterns["Green"]))
-        patternMenu.addAction(greenButton)
-
-        # blue button
-        blueButton = QAction(QIcon(patterns["Blue"]), 'Blue', self)
-        blueButton.setShortcut('Alt + 3')
-        blueButton.setStatusTip('Solid blue')
-        blueButton.triggered.connect(lambda: self.on_click(patterns["Blue"]))
-        patternMenu.addAction(blueButton)
-
-        # white button
-        whiteButton = QAction(QIcon(patterns["White"]), 'White', self)
-        whiteButton.setShortcut('Alt + 4')
-        whiteButton.setStatusTip('Solid white')
-        whiteButton.triggered.connect(lambda: self.on_click(patterns["White"]))
-        patternMenu.addAction(whiteButton)
-
-        # Gray64 button
-        gray64Button = QAction(QIcon(patterns["Gray64"]), 'Gray64', self)
-        gray64Button.setShortcut('Alt + 5')
-        gray64Button.setStatusTip('Gray64')
-        gray64Button.triggered.connect(lambda: self.on_click(patterns["Gray64"]))
-        patternMenu.addAction(gray64Button)
-
-        # Gray32 button
-        gray32Button = QAction(QIcon(patterns["Gray32"]), 'Gray32', self)
-        gray32Button.setShortcut('Alt + 6')
-        gray32Button.setStatusTip('Gray32')
-        gray32Button.triggered.connect(lambda: self.on_click(patterns["Gray32"]))
-        patternMenu.addAction(gray32Button)
-
-        # Gray16 button
-        gray16Button = QAction(QIcon(patterns["Gray16"]), 'Gray16', self)
-        gray16Button.setShortcut('Alt + 7')
-        gray16Button.setStatusTip('Gray16')
-        gray16Button.triggered.connect(lambda: self.on_click(patterns["Gray16"]))
-        patternMenu.addAction(gray16Button)
-
-        # Crosstalk button
-        crosstalkButton = QAction(QIcon(patterns["Crosstalk"]), 'Crosstalk', self)
-        crosstalkButton.setShortcut('Alt + 8')
-        crosstalkButton.setStatusTip('Crosstalk')
-        crosstalkButton.triggered.connect(lambda: self.on_click(patterns["Crosstalk"]))
-        patternMenu.addAction(crosstalkButton)
-
-        # Crosstalk_black button
-        crosstalkblackButton = QAction(QIcon(patterns["Crosstalk_black"]), 'Crosstalk black', self)
-        crosstalkblackButton.setShortcut('Alt + 9')
-        crosstalkblackButton.setStatusTip('Crosstalk_black')
-        crosstalkblackButton.triggered.connect(lambda: self.on_click(patterns["Crosstalk_black"]))
-        patternMenu.addAction(crosstalkblackButton)
-
-        # Grayscale button
-        grayscaleButton = QAction(QIcon(patterns["Grayscale"]), 'Grayscale', self)
-        grayscaleButton.setShortcut('Alt + 10')
-        grayscaleButton.setStatusTip('Grayscale')
-        grayscaleButton.triggered.connect(lambda: self.on_click(patterns["Grayscale"]))
-        patternMenu.addAction(grayscaleButton)
-
-        # Grayscale_reversed button
-        grayscaleReversedButton = QAction(QIcon(patterns["Grayscale_reversed"]), 'Grayscale reversed', self)
-        grayscaleReversedButton.setShortcut('Alt + 11')
-        grayscaleReversedButton.setStatusTip('Grayscale_reversed')
-        grayscaleReversedButton.triggered.connect(lambda: self.on_click(patterns["Grayscale_reversed"]))
-        patternMenu.addAction(grayscaleReversedButton)
-
-        self.keyPressEvent()
-
-        # save button
-
-        # Label
-        label = QLabel(self)
-
-    def on_click(self, pattern):
-        print("success")
-        self.label = QLabel(self)
-        image = QtGui.QImage(QtGui.QImageReader(pattern).read())
-        self.label.setPixmap(QPixmap(image))
-        self.label.setGeometry(0, 0, image.width(), image.height())
-        self.label.show()
-
+    def addMenuAction(self, menu, name, icon_path, shortcut, status_tip, callback):
+        try:
+            action = QAction(QIcon(icon_path) if icon_path else None, name, self)
+            if shortcut:
+                action.setShortcut(shortcut)
+            action.setStatusTip(status_tip)
+            action.triggered.connect(callback)
+            menu.addAction(action)
+        except Exception as e:
+            logger.error(f"Failed to add menu action {name}: {e}")
 
     def popupMessage(self):
-        QMessageBox.about(self, "About", "Developed by <a href='yifei.li@byton.com'>Yifei Li</a>")
+        QMessageBox.about(self, "About", 
+                         "Display Pattern Generator\n\n"
+                         "A tool for testing display functionality and performance.\n\n")
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.close()
+        event.accept()
 
-    def keyPressEvent(self, QKeyEvent):
-        key = QKeyEvent.key()
-        if key == QtCore.Qt.Key_Right:
-            print("right arrow key pressed")
-
-
+def main():
+    try:
+        app = QApplication(sys.argv)
+        window = Window()
+        window.show()
+        sys.exit(app.exec_())
+    except Exception as e:
+        logger.error(f"Application error: {e}")
+        sys.exit(1)
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = Window()
-    window.show()
-
-    sys.exit(app.exec_())
+    main()
