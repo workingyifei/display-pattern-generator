@@ -130,16 +130,11 @@ class Window(QMainWindow):
             self.options_layout.addWidget(combo_dropdown)
 
         elif category == "Grid":
-            grid_layout = QFormLayout()
-            rows_spin = QSpinBox()
-            rows_spin.setRange(1, 100)
-            rows_spin.setObjectName("rows_spin")
-            cols_spin = QSpinBox()
-            cols_spin.setRange(1, 100)
-            cols_spin.setObjectName("cols_spin")
-            grid_layout.addRow("Rows:", rows_spin)
-            grid_layout.addRow("Columns:", cols_spin)
-            self.options_layout.addLayout(grid_layout)
+            self.options_layout.addWidget(QLabel("Select Grid Pattern:"))
+            grid_dropdown = QComboBox()
+            grid_dropdown.addItems(self.pattern_categories[category])
+            grid_dropdown.setObjectName("grid_dropdown")
+            self.options_layout.addWidget(grid_dropdown)
 
     def get_selected_options(self):
         """Get the currently selected options based on the pattern category"""
@@ -159,11 +154,8 @@ class Window(QMainWindow):
                 bg_color, fg_color = widget.currentText().split("_")
                 options["background_color"] = bg_color
                 options["box_color"] = fg_color
-            elif category == "Grid":
-                if widget.objectName() == "rows_spin":
-                    options["rows"] = widget.value()
-                elif widget.objectName() == "cols_spin":
-                    options["cols"] = widget.value()
+            elif category == "Grid" and widget.objectName() == "grid_dropdown":
+                options["pattern"] = widget.currentText()
 
         return options
 
@@ -197,9 +189,11 @@ class Window(QMainWindow):
                     save=False
                 )
             elif category == "Grid":
+                pattern = options["pattern"]
+                rows, cols = map(int, pattern.split("x"))
                 image = generator.generate_grid(
-                    rows=options["rows"],
-                    cols=options["cols"],
+                    rows=rows,
+                    cols=cols,
                     save=False
                 )
 
